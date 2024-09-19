@@ -1,0 +1,86 @@
+﻿@page "/ManageUnits"
+@inject HttpClient Http
+@using System.Data.SqlClient
+
+<h3>Manage Units</h3>
+
+<div>
+    <label>Unit No:</label>
+    <input type="text" @bind="unit.UnitNo" /><br />
+
+    <label>Floor:</label>
+    <input type="number" @bind="unit.Floor" /><br />
+
+    <label>Type:</label>
+    <select @bind="unit.Type">
+        <option value="">--Select Type--</option>
+        <option value="Apartment">Apartment</option>
+        <option value="Office">Office</option>
+        <option value="Shop">Shop</option>
+        <option value="Penthouse">Penthouse</option>
+    </select><br />
+
+    <label>Special Type:</label>
+    <input type="text" @bind="unit.SpecialType" /><br />
+
+    <label>Unit Size Per Sq Feet:</label>
+    <input type="number" @bind="unit.UnitSizePerSqFeet" /><br />
+
+    <label>Unit Size:</label>
+    <input type="number" @bind="unit.UnitSize" /><br />
+
+    <button @onclick="AddNow">Add Now</button>
+</div>
+
+<hr />
+
+<div>
+    <h4>Total Units Entered: @totalUnits</h4>
+</div>
+
+@code {
+    private Unit unit = new Unit();
+    private int totalUnits = 0;
+
+    private async Task AddNow()
+    {
+        // Save the unit details to the database
+        var query = "INSERT INTO Units (UnitNo, Floor, Type, SpecialType, UnitSizePerSqFeet, UnitSize) " +
+                    "VALUES (@UnitNo, @Floor, @Type, @SpecialType, @UnitSizePerSqFeet, @UnitSize)";
+
+        var parameters = new[]
+        {
+            new SqlParameter("@UnitNo", unit.UnitNo),
+            new SqlParameter("@Floor", unit.Floor),
+            new SqlParameter("@Type", unit.Type),
+            new SqlParameter("@SpecialType", unit.SpecialType),
+            new SqlParameter("@UnitSizePerSqFeet", unit.UnitSizePerSqFeet),
+            new SqlParameter("@UnitSize", unit.UnitSize)
+        };
+
+        using (var connection = new SqlConnection("YourConnectionStringHere"))
+        {
+            await connection.OpenAsync();
+            using (var command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddRange(parameters);
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+
+        // Update total unit count
+        totalUnits++;
+        // Clear the form
+        unit = new Unit();
+    }
+
+    public class Unit
+    {
+        public string? UnitNo { get; set; }
+        public int? Floor { get; set; }
+        public string? Type { get; set; }
+        public string? SpecialType { get; set; }
+        public decimal? UnitSizePerSqFeet { get; set; }
+        public decimal? UnitSize { get; set; }
+    }
+}
